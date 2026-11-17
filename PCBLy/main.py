@@ -36,28 +36,50 @@ class ToolTip(object):
         if tw: tw.destroy()
 
 # --- Engineering Model ---
+MIL2_PER_MM2 = 1550.0031  # 1 mm² = 1550 mil²
+UM_PER_MIL = 25.4
+VIA_DIAMETERS = [0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8]
+
+
 class PCBModel:
+    # IPC-2221 conductor sizing: I = k · ΔT^0.44 · A^0.725
+    # (I in A, ΔT in °C, A = cross-section in mil²; k = 0.048 external, 0.024 internal)
+    K_EXTERNAL = 0.048
+    K_INTERNAL = 0.024
+
     @staticmethod
-    def ipc2152_trace_width(current, copper_um, temp_rise, is_ext):
-        K = 0.024 if is_ext else 0.012
-        area_mm2 = K * (current ** 0.44) * (temp_rise ** -0.725)
-        return area_mm2 / (copper_um / 1000)
+    def ipc2221_area_mil2(current, temp_rise, is_ext):
+        k = PCBModel.K_EXTERNAL if is_ext else PCBModel.K_INTERNAL
+        return (current / (k * temp_rise ** 0.44)) ** (1 / 0.725)
+
+    @staticmethod
+    def ipc2221_current(area_mm2, temp_rise, is_ext):
+        k = PCBModel.K_EXTERNAL if is_ext else PCBModel.K_INTERNAL
+        return k * temp_rise ** 0.44 * (area_mm2 * MIL2_PER_MM2) ** 0.725
+
+    @staticmethod
+    def trace_width(current, copper_um, temp_rise, is_ext):
+        """Minimum trace width in mm (IPC-2221)."""
+        area_mil2 = PCBModel.ipc2221_area_mil2(current, temp_rise, is_ext)
+        width_mil = area_mil2 / (copper_um / UM_PER_MIL)
+        return width_mil * UM_PER_MIL / 1000
+
+    @staticmethod
+    def via_capacity(drill_mm, plating_um, temp_rise):
+        """Current one via barrel can carry, in A (IPC-2221 applied to the barrel's copper ring)."""
+        t_mm = plating_um / 1000.0
+        area_mm2 = math.pi / 4 * ((drill_mm + 2 * t_mm) ** 2 - drill_mm ** 2)
+        return PCBModel.ipc2221_current(area_mm2, temp_rise, is_ext=True)
 
     @staticmethod
     def via_recommend(current, pcb_thick, plating_um, temp_rise, n_vias=1):
-        diameters = [0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8]
         rec = []
-        for d in diameters:
-            t_mm = plating_um / 1000.0
-            out_d = d + 2 * t_mm
-            area_mm2 = math.pi * ((out_d/2)**2 - (d/2)**2)
-            resistance = 1.68e-8 * (pcb_thick / 1000) / (area_mm2 * 1e-6)
-            ampacity = math.sqrt(temp_rise / (resistance * 0.024))
-            total_cap = ampacity * n_vias
+        for d in VIA_DIAMETERS:
+            total_cap = PCBModel.via_capacity(d, plating_um, temp_rise) * n_vias
             ar = pcb_thick / d
             pad = d + 0.4
             ok = (total_cap >= current and ar <= 10)
-            rec.append((f"{d:.2f}", f"{pad:.2f}", f"{ampacity:.2f}", f"{ar:.1f}", "✔" if ok else ""))
+            rec.append((f"{d:.2f}", f"{pad:.2f}", f"{total_cap:.2f}", f"{ar:.1f}", "✔" if ok else ""))
         return rec
 
     @staticmethod
@@ -195,17 +217,17 @@ class PCBToolkitGUI(tb.Window):
 
     def calc_trace(self):
         cur, cu, dT = map(float, [v.get() for v in self.trace_vars])
-        w = PCBModel.ipc2152_trace_width(cur, cu, dT, self.trace_ext.get())
+        w = PCBModel.trace_width(cur, cu, dT, self.trace_ext.get())
         self.trace_res.config(state="normal"); self.trace_res.delete("1.0","end")
-        self.trace_res.insert("end",f"Required width: {w:.3f} mm (IPC-2152)\n")
+        self.trace_res.insert("end",f"Required width: {w:.3f} mm (IPC-2221)\n")
         self.trace_res.config(state="disabled")
         self.trace_ax.clear()
         I = [i * 0.2 for i in range(1, 26)]
-        W = [PCBModel.ipc2152_trace_width(i, cu, dT, self.trace_ext.get()) for i in I]
+        W = [PCBModel.trace_width(i, cu, dT, self.trace_ext.get()) for i in I]
         self.trace_ax.plot(I, W, 'o-', color="#18c3d8", linewidth=2)
         self.trace_ax.set_xlabel("Current (A)")
         self.trace_ax.set_ylabel("Width (mm)")
-        self.trace_ax.set_title("Trace Width vs Current (IPC-2152)", fontsize=11)
+        self.trace_ax.set_title("Trace Width vs Current (IPC-2221)", fontsize=11)
         self.trace_ax.grid(True)
         self.trace_canvas.draw()
         self.calc_results['trace'] = self.trace_res
@@ -241,8 +263,9 @@ class PCBToolkitGUI(tb.Window):
         resplot = tb.Labelframe(f, text="Recommendation & Plot", bootstyle="info", padding=(8,8))
         resplot.pack(side="left", fill="both", expand=True, pady=30, padx=(0,30))
         self.via_table = tb.Treeview(resplot, columns=("Dia", "Pad", "Cap", "AR", "✔"), show='headings', height=7,bootstyle="info")
+        headings = {"Dia": "Drill (mm)", "Pad": "Pad (mm)", "Cap": "Max I (A)", "AR": "AR", "✔": "✔"}
         for col in ("Dia","Pad","Cap","AR","✔"):
-            self.via_table.heading(col, text=col)
+            self.via_table.heading(col, text=headings[col])
             self.via_table.column(col, width=78 if col!="✔" else 35, anchor="center")
         self.via_table.pack(padx=5, pady=2)
         self.via_fig = plt.Figure(figsize=(3.6,3.2), dpi=90)
@@ -256,17 +279,9 @@ class PCBToolkitGUI(tb.Window):
         for r in self.via_table.get_children(): self.via_table.delete(r)
         for row in table: self.via_table.insert("", "end", values=row)
         self.via_ax.clear()
-        diameters = [0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8]
         n_vias = vals[4]
-        amps = []
-        for d in diameters:
-            t_mm = vals[2] / 1000.0
-            out_d = d + 2 * t_mm
-            area_mm2 = math.pi * ((out_d/2)**2 - (d/2)**2)
-            resistance = 1.68e-8 * (vals[1] / 1000) / (area_mm2 * 1e-6)
-            ampacity = math.sqrt(vals[3] / (resistance * 0.024))
-            amps.append(ampacity * n_vias)
-        self.via_ax.plot(diameters, amps, 'o-', color="#34fa62", linewidth=2)
+        amps = [PCBModel.via_capacity(d, vals[2], vals[3]) * n_vias for d in VIA_DIAMETERS]
+        self.via_ax.plot(VIA_DIAMETERS, amps, 'o-', color="#34fa62", linewidth=2)
         self.via_ax.axhline(vals[0], color="#fc686c", linestyle="--", label="Required")
         self.via_ax.set_xlabel("Via Diameter (mm)")
         self.via_ax.set_ylabel("Max Current (A)")
@@ -453,10 +468,10 @@ class PCBToolkitGUI(tb.Window):
                 z = float(val.split(":")[1].split("Ω")[0])
                 if abs(z-50)<2:
                     suggestions.append("✅ Trace impedance very close to 50Ω — ideal for most RF/high-speed signals.")
-                elif z>60:
-                    suggestions.append("⚠️  Impedance too high; reduce width or raise εr.")
+                elif z>50:
+                    suggestions.append("⚠️  Impedance too high; widen the trace or move it closer to the reference plane.")
                 else:
-                    suggestions.append("⚠️  Impedance low; increase width or reduce εr.")
+                    suggestions.append("⚠️  Impedance low; narrow the trace or increase the height to the reference plane.")
         except: pass
         try:
             val = self.vdrop_res.get("1.0","end").strip()

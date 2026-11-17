@@ -2,7 +2,7 @@
 
 # PCBly: your friendly PCB sidekick
 
-**A free desktop calculator for PCB designers: IPC-2152 trace width, via current capacity, microstrip impedance, voltage drop and IPC-2221B clearance, with live plots and one-click report export.**
+**A free desktop calculator for PCB designers: IPC-2221 trace width, via current capacity, microstrip impedance, voltage drop and IPC-2221B clearance, with live plots and one-click report export.**
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![GUI](https://img.shields.io/badge/GUI-ttkbootstrap-0ea5e9?style=for-the-badge)
@@ -23,8 +23,8 @@ Every PCB layout session hits the same questions: *How wide should this power tr
 
 | Tool | What you get |
 |---|---|
-| **Trace width** (IPC-2152) | Minimum width for a given current, copper weight and temperature rise, internal or external layer, plotted against current |
-| **Via recommendation** | A table of via drill / pad sizes with current capacity and aspect ratio, for any number of parallel vias |
+| **Trace width** (IPC-2221) | Minimum width for a given current, copper weight and temperature rise, internal or external layer, plotted against current |
+| **Via recommendation** | A table of via drill / pad sizes with current capacity (A, IPC-2221 on the plated barrel) and aspect ratio, for any number of parallel vias |
 | **Microstrip impedance** | Z₀ via Hammerstad–Jensen for FR-4, Rogers 4350B or polyimide, plotted against trace width |
 | **Voltage drop** | Trace resistance, voltage drop and power loss |
 | **Clearance** (IPC-2221B) | Minimum conductor spacing for a voltage and board location |
@@ -63,7 +63,7 @@ Requires Python 3.8+ with Tkinter (included in the standard Python installers fo
 
 ## Accuracy note
 
-PCBly uses published approximations (IPC-2152 / IPC-2221B curve fits and the Hammerstad–Jensen microstrip model). It's meant for fast early-stage estimates. For production boards, confirm critical values with your fab's stackup and a field solver.
+PCBly uses published approximations: the IPC-2221 conductor-sizing equation `I = k·ΔT^0.44·A^0.725` (k = 0.048 external, 0.024 internal) for traces and via barrels, the IPC-2221B clearance table and the Hammerstad–Jensen microstrip model. IPC-2221 is the classic standard; the newer IPC-2152 charts can give different widths depending on the stackup. It's meant for fast early-stage estimates. For production boards, confirm critical values with your fab's stackup and a field solver.
 
 ## Roadmap
 
