@@ -405,7 +405,7 @@ class PCBToolkitGUI(tb.Window):
         ent.grid(row=0,column=1,padx=3)
         ToolTip(ent, "Enter maximum voltage between conductors.")
         tb.Label(group, text="Location:", font=("Segoe UI", 11)).grid(row=1,column=0,sticky="e",pady=3)
-        self.clr_loc = tb.StringVar(value="external_uncoated")
+        self.clr_loc = tb.StringVar(value="External Uncoated")
         opts=[("Internal","internal"),("External Uncoated","external_uncoated"),("External Coated","external_coated")]
         comb = tb.Combobox(group, textvariable=self.clr_loc, values=[o[0] for o in opts], state="readonly", width=19)
         comb.grid(row=1,column=1,padx=3)
@@ -422,7 +422,7 @@ class PCBToolkitGUI(tb.Window):
         v = float(self.clr_var1.get())
         locval = self.clr_loc.get()
         opts=[("Internal","internal"),("External Uncoated","external_uncoated"),("External Coated","external_coated")]
-        loc = [l for n,l in opts if n==locval][0]
+        loc = next((l for n, l in opts if locval in (n, l)), "external_uncoated")
         val = PCBModel.clearance_ipc2221(v, loc)
         self.clr_result.config(state="normal")
         self.clr_result.delete("1.0","end")
