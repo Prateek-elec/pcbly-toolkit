@@ -1,6 +1,6 @@
 <div align="center">
 
-# PCBly: your friendly PCB sidekick
+<img src="docs/banner.png" alt="PCBly" width="100%"/>
 
 **A free desktop calculator for PCB designers: IPC-2221 trace width, via current capacity, microstrip impedance, voltage drop and IPC-2221B clearance, with live plots and one-click report export.**
 
@@ -9,13 +9,18 @@
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-6b7280?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge)
 
-<img src="docs/screenshots/01-trace-width.png" width="80%" alt="PCBly trace width calculator with plot"/>
-
 </div>
 
 ---
 
-## Why
+## 🔥 Why it hits different
+
+- 🧮 **Five calculators, one window:** trace width, vias, impedance, voltage drop, clearance.
+- 📈 **Live plots:** see how width, current and impedance trade off as you type.
+- 📄 **One-click report:** export every result for your design notes.
+- 🖥️ **Free and offline:** no more hopping between five calculator websites at 2 AM.
+
+## The problem it solves
 
 Every PCB layout session hits the same questions: *How wide should this power trace be? Will one via carry 2 A? Is this track 50 Ω?* PCBly answers them in one window, offline, without hunting for a different web calculator each time.
 
@@ -80,8 +85,16 @@ Found a wrong number, or want another calculator? [Open an issue](https://github
 
 [MIT](LICENSE) © Prateek Sarkar
 
+---
+
 <div align="center">
 
-**If PCBly saved you a trip to five calculator websites, a ⭐ is appreciated.**
+### If this made you go *"wait, that's sick"* 👀
+
+**Drop a ⭐ so more builders find it, and share it with someone who'd build one.**
+
+[![Share on X](https://img.shields.io/badge/share%20on-X-000000?style=for-the-badge&logo=x&logoColor=white)](https://twitter.com/intent/tweet?text=PCBly%3A%20five%20PCB%20calculators%20in%20one%20free%20desktop%20app%20%F0%9F%A7%AE&url=https%3A%2F%2Fgithub.com%2FPrateek-elec%2Fpcbly-toolkit)
+[![Share on LinkedIn](https://img.shields.io/badge/share%20on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2FPrateek-elec%2Fpcbly-toolkit)
+[![Follow](https://img.shields.io/badge/follow-@Prateek--elec-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Prateek-elec)
 
 </div>
