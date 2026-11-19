@@ -13,7 +13,7 @@
 
 ---
 
-## 🔥 Why it hits different
+## Highlights
 
 - 🧮 **Five calculators, one window:** trace width, vias, impedance, voltage drop, clearance.
 - 📈 **Live plots:** see how width, current and impedance trade off as you type.
@@ -89,7 +89,7 @@ Found a wrong number, or want another calculator? [Open an issue](https://github
 
 <div align="center">
 
-### If this made you go *"wait, that's sick"* 👀
+### Found this useful?
 
 **Drop a ⭐ so more builders find it, and share it with someone who'd build one.**
 
